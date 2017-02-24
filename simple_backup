@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+
+#Simple Backup
+
+PROGNAME="Simple Backup"
+VERSION="0.2"
+
+
+SOURCE=`zenity --title "$PROGNAME $VERSION - Seleziona la cartella sorgente" --file-selection --directory`
+
+if [[ `echo $SOURCE` == "" ]]
+then
+	zenity --info --title "$PROGNAME - $VERSION" --text "Nessuna cartella sorgente selezionata.\nVerra' usata la cartella /home/$USER"	
+	SOURCE="/home/$USER"
+fi
+
+TARGET=`zenity --title "$PROGNAME $VERSION - Seleziona la cartella destinazione" --file-selection --directory`
+
+	
+if [[ `echo $TARGET` == "" ]] || [[ `echo $SOURCE` == "" ]] 
+then
+	zenity --error --title "$PROGNAME - $VERSION" --text "Errore. Devi selezionare una directory"
+else
+	RISP=`zenity --list --title "$PROGNAME - $VERSION" --text "Cartella sorgente:\n$SOURCE\n\nCartella destinazione:\n$TARGET\n\nSei sicuro di voler continuare?" --radiolist --column "Choice" --column "Type" FALSE "Si" TRUE "No"`
+	
+	if [[ `echo $RISP` == "Si" ]]
+	then
+		rsync -avd --delete --progress --log-file=/tmp/backup_log --stats $SOURCE/ $TARGET | zenity --progress --title "$PROGNAME - $VERSION" --text="Sto sincronizzando nella cartella: $TARGET..." --pulsate --auto-close
+	
+		zenity --text-info --title "$PROGNAME - $VERSION - Log" --width="560" --height="300" --filename=/tmp/backup_log
+	else
+		zenity --info --title "$PROGNAME - $VERSION" --text "Operazione annullata."
+	fi
+fi	
+
